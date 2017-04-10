@@ -1,16 +1,13 @@
 import VueRouter from 'vue-router';
-import Hello from './components/annotation.vue';
+import Home from './components/home.vue';
 
 export default {
+  mode: 'history',
   routes: [
     {
-      path: '/hello',
-      name: 'hello',
-      component: Hello
-    },
-    {
-      path: '*',
-      redirect: {name: 'hello'}
+      path: '/',
+      name: 'home',
+      component: Home
     }
   ]
 }

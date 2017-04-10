@@ -15,16 +15,4 @@ new Vue({
   router,
   el: '#app',
   render: h => h(App),
-  created () {
-    console.log('App created');
-  },
-  mounted () {
-    console.log('App mounted');
-  },
-  updated () {
-    console.log('App updated');
-  },
-  destroyed () {
-    console.log('App destroyed');
-  }
 });

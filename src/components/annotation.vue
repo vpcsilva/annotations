@@ -5,7 +5,6 @@
 <script>
   import L from 'leaflet';
   import EventBus from '../eventBus.js';
-  let map;
 
   let imageWidth = 654;
   let imageHeight = 435;

@@ -1,73 +1,101 @@
 <template>
   <div id="app">
-    <toolbar></toolbar>
+    <Toolbar></Toolbar>
     <div class="container-fluid">
       <div class="col-sm-2">
-        <ul v-for="source in images">
-          <thumb :source="source" ></thumb>
+        <ul>
+          <li class="thumb" v-for="(img, index) in thumbs">
+            <!--<img :id="index" @click="changeDrawboard(index)" class="img-responsive" :src="img.src" alt="">-->
+            <img :id="index" class="img-responsive" :src="img.src" alt="">
+          </li>
         </ul>
       </div>
       <div class="col-sm-10">
-        <annotation :source="this.canvas"></annotation>
+        <!--<div v-for="(img, index) in images">-->
+          <!--<drawboard :index="index" v-show="index == currentDrawboard" :image="img" ></drawboard>-->
+          <drawboard :index="0" :image="images[0]" ></drawboard>
+        <!--</div>-->
       </div>
     </div>
-    
   </div>
 </template>
 
 <script>
-import toolbar from './components/toolbar.vue';
-import annotation from './components/annotation.vue';
-import thumb from './components/thumb.vue';
+import Toolbar from './components/toolbar.vue';
+import Drawboard from './components/drawboard.vue';
+import routes from './routes.js';
+import myImage from './components/image.js';
+
 import EventBus from './eventBus.js';
 
-
-let sources = [
-  'http://res.freestockphotos.biz/pictures/2/2481-closeup-of-a-1040-tax-form-and-a-pen-pv.jpg',
-  'http://res.freestockphotos.biz/pictures/2/2483-closeup-of-a-1040-tax-form-and-a-pen-pv.jpg',
-  'http://res.freestockphotos.biz/pictures/2/2484-closeup-of-a-tax-income-graph-and-pen-pv.jpg'
+// --- DATA ---
+let fullImages = [
+  require('./assets/image-1.jpg'),
+  require('./assets/image-2.jpg'),
 ];
-let canvas = sources[0];
+let thumbs = [
+  require('./assets/thumb-1.jpg'),
+  require('./assets/thumb-2.jpg')
+];
 
+// --- EXPORT ---
 export default {
   name: 'app',
+  created () {
+    this.images = this.loadImages(fullImages);
+    this.thumbs = this.loadImages(thumbs);
+  },
   data () {
     return {
-      images: sources,
-      canvas: canvas
+      images: null,
+      thumbs: null,
+      currentDrawboard: 0,
     }
   },
   components: {
-    toolbar,
-    annotation,
-    thumb
+    Toolbar,
+    Drawboard
+  },
+  methods: {
+    changeDrawboard (index) {
+      this.currentDrawboard = index;
+      EventBus.$emit('changeDrawboard', index);
+    },
+    loadImages(sources) {
+      let images = [];
+      sources.forEach( src => {
+        let image = myImage.newImage(src);
+        images.push(image);
+      });
+      return images;
+    }
   }
 }
 </script>
 
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
-}
+  #app {
+    font-family: 'Avenir', Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: #2c3e50;
+  }
 
-h1, h2 {
-  font-weight: normal;
-}
+  h1, h2 {
+    font-weight: normal;
+  }
 
-ul {
-  list-style-type: none;
-  padding: 0;
-}
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
 
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
+  li.thumb {
+    display: block;
+    margin: 20px;
+  }
 
-a {
-  color: #42b983;
-}
+  a {
+    color: #42b983;
+  }
 </style>

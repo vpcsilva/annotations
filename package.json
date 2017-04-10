@@ -10,9 +10,12 @@
   },
   "dependencies": {
     "leaflet": "^1.0.3",
+    "leaflet-draw": "^0.4.9",
     "vue": "^2.2.1",
+    "vue-bootstrap-modal": "^0.1.13",
     "vue-resource": "^1.2.1",
-    "vue-router": "^2.3.1"
+    "vue-router": "^2.3.1",
+    "vuex": "^2.2.1"
   },
   "devDependencies": {
     "babel-core": "^6.0.0",
