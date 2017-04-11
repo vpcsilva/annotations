@@ -2,7 +2,7 @@
   <div id="app">
     <Toolbar></Toolbar>
     <div class="container-fluid">
-      <div class="col-sm-2">
+      <div class="col-sm-2 sidebar">
         <ul>
           <li class="thumb" v-for="(img, index) in thumbs">
             <img :id="index" @click="changeDrawboard(index)" class="img-responsive" :src="img.src" alt="">
@@ -87,6 +87,10 @@ export default {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     color: #2c3e50;
+  }
+
+  .sidebar {
+    background-color: #DDD;
   }
 
   h1, h2 {
