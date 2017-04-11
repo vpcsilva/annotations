@@ -30,12 +30,12 @@ import EventBus from './eventBus.js';
 
 // --- DATA ---
 let fullImages = [
-  require('./assets/image-1.jpg'),
-  require('./assets/image-2.jpg'),
+  'https://raw.githubusercontent.com/vpcsilva/annotations/gh-pages/dist/image-1.jpg',
+  'https://raw.githubusercontent.com/vpcsilva/annotations/gh-pages/dist/image-2.jpg',
 ];
 let thumbs = [
-  require('./assets/thumb-1.jpg'),
-  require('./assets/thumb-2.jpg')
+  'https://raw.githubusercontent.com/vpcsilva/annotations/gh-pages/dist/thumb-1.jpg',
+  'https://raw.githubusercontent.com/vpcsilva/annotations/gh-pages/dist/thumb-2.jpg'
 ];
 
 // --- EXPORT ---
