@@ -1,5 +1,5 @@
 <template>
-  <div id="map" class="map"></div>
+  <div :id="id" class="map"></div>
 </template>
 <script>
   import EventBus from '../eventBus.js';
@@ -11,12 +11,11 @@
     data () {
       return {
         src: this.image.src,
-        // image: this.image,
         imgHeight: false,
         imgWidth: false,
         map: false,
         bounds: false,
-        // id: 'map'+this._uid,
+        id: 'map'+this._uid,
         isActive: false,
         itensOnMap: false,
         drawItems: null,
@@ -24,9 +23,9 @@
       }
     },
     created () {
-      // if(this.index == 0) {
-      //   this.isActive = true;
-      // }
+      if(this.index == 0) {
+        this.isActive = true;
+      }
 
       EventBus.$on('changeDrawboard', this.changeDrawboard);
       EventBus.$on('addCircle', this.addCircle);
@@ -47,7 +46,7 @@
           minZoom: -5,
         };
 
-        this.map = L.map('map', options);
+        this.map = L.map(this.id, options);
 
         let drawItems = L.featureGroup().addTo(this.map);
         this.bounds = [[0,0],[this.imgHeight, this.imgWidth]];
