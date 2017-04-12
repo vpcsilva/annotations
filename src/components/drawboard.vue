@@ -10,32 +10,32 @@
     props: ['image', 'index'],
     data () {
       return {
-        src: this.image.src,
-        imgHeight: false,
-        imgWidth: false,
+        imgHeight: this.image.height,
+        imgWidth: this.image.width,
         map: false,
         bounds: false,
         id: 'map'+this._uid,
-        isActive: false,
         itensOnMap: false,
         drawItems: null,
         show: false,
+        images: [],
+        componentIndex: this.index,
+        imageOverlay: false,
+      }
+    },
+    watch: {
+      image: function(newImg, oldImg) {
+        this.imgWidth = newImg.width;
+        this.imgHeight = newImg.height;
+        this.setImage();
       }
     },
     created () {
-      if(this.index == 0) {
-        this.isActive = true;
-      }
-
+      // --- Events ---
       EventBus.$on('changeDrawboard', this.changeDrawboard);
-      EventBus.$on('addCircle', this.addCircle);
       EventBus.$on('save', this.export);
     },
     mounted () {
-      this.imgHeight = this.image.height;
-      this.imgWidth = this.image.width;
-      console.log(this.image.width);
-      console.log(this.image.height);
       this.setupMap();
     },
     methods: {
@@ -50,7 +50,7 @@
 
         let drawItems = L.featureGroup().addTo(this.map);
         this.bounds = [[0,0],[this.imgHeight, this.imgWidth]];
-        let image = L.imageOverlay(this.src, this.bounds).addTo(this.map);
+        this.imageOverlay = L.imageOverlay(this.image.src, this.bounds).addTo(this.map);
 
         let control = new L.Control.Draw({
           edit: {
@@ -75,26 +75,26 @@
         this.drawItems = drawItems;
         this.map.fitBounds(this.bounds);
       },
+      createLatLngBounds (bounds) {
+        let corner1 = L.latLng(0, 0);
+        let corner2 = L.latLng(this.imgHeight, this.imgWidth);
+        return new L.latLngBounds(corner1, corner2);
+      },
+      setImage () {
+        this.bounds = [[0,0],[this.imgHeight, this.imgWidth]];
+        this.imageOverlay.setUrl(this.image.src);
+        this.imageOverlay.setBounds(this.createLatLngBounds(this.bounds));
+      },
       changeDrawboard (index) {
         if (index == this.index) {
           this.isActive = true;
         } else {
           this.isActive = false;
         }
-      },
-      addCircle () {
-        if (this.isActive) {
-          console.log('ADD CIRCLE');
-        }
+        this.componentIndex = index;
       },
       export () {
         console.log(this.drawItems.toGeoJSON());
-      },
-      modalOk () {
-        this.show = false;
-      },
-      modalCancel () {
-        this.show = false;
       }
     }
   }

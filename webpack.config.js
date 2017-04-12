@@ -1,5 +1,6 @@
 var path = require('path')
 var webpack = require('webpack')
+const HtmlwebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   entry: './src/main.js',
@@ -33,6 +34,13 @@ module.exports = {
       }
     ]
   },
+  plugins: [
+    new HtmlwebpackPlugin({
+      title: 'ReleaseFlow',
+      inject:  true,
+      template: './index.html'
+    })
+  ],
   resolve: {
     alias: {
       'vue$': 'vue/dist/vue.esm.js'

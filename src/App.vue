@@ -4,17 +4,17 @@
     <div class="container-fluid">
       <div class="col-sm-2 sidebar">
         <ul>
-          <li class="thumb" v-for="(img, index) in thumbs">
-            <img :id="index" @click="changeDrawboard(index)" class="img-responsive" :src="img.src" alt="">
-            <!-- <img :id="index" class="img-responsive" :src="img.src" alt=""> -->
+          <li class="thumb" v-for="(img, index) in images">
+            <img :id="index" @click="changeDrawboard(index)" class="img-responsive" :src="img.thumb" alt="">
+            <!-- <img :id="index" class="img-responsive" :src="img.thumb" alt=""> -->
           </li>
         </ul>
       </div>
       <div class="col-sm-10">
-        <div v-for="(img, index) in images">
-          <drawboard :index="index" v-show="index == currentDrawboard" :image="img" ></drawboard>
-          <!-- <drawboard :index="0" :image="images[0]" ></drawboard> -->
-        </div>
+        <!-- <div v-for="(img, index) in images"> -->
+          <!-- <drawboard :index="index" v-show="index == currentDrawboard" :image="img" ></drawboard> -->
+          <drawboard :index="0" :image="currentImage" ></drawboard>
+        <!-- </div> -->
       </div>
     </div>
   </div>
@@ -32,32 +32,25 @@ import EventBus from './eventBus.js';
 let fullImages = [
   {
     src: 'https://raw.githubusercontent.com/vpcsilva/annotations/gh-pages/dist/image-1.jpg',
+    thumb: 'https://raw.githubusercontent.com/vpcsilva/annotations/gh-pages/dist/thumb-1.jpg',
     width: 1241,
     height: 1754,
   },
   {
     src: 'https://raw.githubusercontent.com/vpcsilva/annotations/gh-pages/dist/image-2.jpg',
+    thumb: 'https://raw.githubusercontent.com/vpcsilva/annotations/gh-pages/dist/thumb-2.jpg',
     width: 1241,
     height: 1754,
   },
-];
-let thumbs = [
-  'https://raw.githubusercontent.com/vpcsilva/annotations/gh-pages/dist/thumb-1.jpg',
-  'https://raw.githubusercontent.com/vpcsilva/annotations/gh-pages/dist/thumb-2.jpg'
 ];
 
 // --- EXPORT ---
 export default {
   name: 'app',
-  created () {
-    // this.images = this.loadImages(fullImages);
-    this.thumbs = this.loadImages(thumbs);
-  },
   data () {
     return {
       images: fullImages,
-      thumbs: null,
-      currentDrawboard: 0,
+      currentImage: fullImages[0],
     }
   },
   components: {
@@ -66,7 +59,7 @@ export default {
   },
   methods: {
     changeDrawboard (index) {
-      this.currentDrawboard = index;
+      this.currentImage = this.images[index];
       EventBus.$emit('changeDrawboard', index);
     },
     loadImages(sources) {
