@@ -1,10 +1,21 @@
 <template>
-  <div :id="id" class="map"></div>
+  <div>
+    <div :id="id" class="map"></div>
+    <Modal :title="modalTitle" :show="showModal" @ok="modalOk" @cancel="modalCancel">
+      <textarea name="" id="" cols="30" rows="3" class="form-control" v-model="markerMessage"></textarea>
+    </Modal>
+  </div>
 </template>
+
 <script>
   import EventBus from '../eventBus.js';
   import L from 'leaflet';
   import LD from 'leaflet-draw';
+  import Modal from './modal.vue';
+  import CM from 'leaflet-contextmenu';
+
+  // import GU from 'leaflet-geometryutil';
+  // import Snap from 'leaflet-snap';
 
   export default {
     props: ['image', 'index'],
@@ -17,10 +28,12 @@
         id: 'map'+this._uid,
         itensOnMap: false,
         drawItems: null,
-        show: false,
+        showModal: false,
         images: [],
         componentIndex: this.index,
         imageOverlay: false,
+        markerMessage: '',
+        modalTitle: 'Comment'
       }
     },
     watch: {
@@ -34,6 +47,7 @@
       // --- Events ---
       EventBus.$on('changeDrawboard', this.changeDrawboard);
       EventBus.$on('save', this.export);
+      EventBus.$on('import', this.retrieve);
     },
     mounted () {
       this.setupMap();
@@ -60,16 +74,46 @@
             },
           },
           draw: {
+            polyline: false,
             polygon: false,
             circle: false,
           },
         });
 
+        window.drawItems = drawItems;
         this.map.addControl(control);
 
-        this.map.on(L.Draw.Event.CREATED, function(e) {
+        this.map.on(L.Draw.Event.CREATED, (e) => {
           let layer = e.layer;
-          drawItems.addLayer(layer);
+          let type = e.layerType;
+
+          this.showModal = true;
+          this.afterOk = () => {
+            layer.bindPopup(this.markerMessage);
+            drawItems.addLayer(layer);
+          }
+          this.afterCancel = () => {
+            console.log('Item canceled');
+          }
+          layer.bindContextMenu({
+            contextmenu: true,
+            contextmenuItems: [
+              {
+                text: 'Edit Comment',
+                callback: () => {
+                  this.markerMessage = layer.getPopup().getContent();
+                  this.showModal = true;
+                  this.afterOk = () => {
+                    layer.setPopupContent(this.markerMessage);
+                  }
+                }
+              },
+              '-',
+              {
+                text: 'Close'
+              }
+            ]
+          })
         });
 
         this.drawItems = drawItems;
@@ -94,8 +138,39 @@
         this.componentIndex = index;
       },
       export () {
+        this.showModal = true;
+        this.modalTitle = 'Map Data';
+        this.markerMessage = JSON.stringify(this.drawItems.toGeoJSON());
+        window.geoJson = this.drawItems.toGeoJSON();
         console.log(this.drawItems.toGeoJSON());
+      },
+      retrieve () {
+        this.showModal = true;
+        this.modalTitle = 'Import Data';
+        this.afterOk = () => {
+          let geoJson = L.geoJSON(JSON.parse(this.markerMessage));
+          geoJson.addTo(this.drawItems);
+        }
+      },
+      modalOk () {
+        this.showModal = false;
+        if (this.afterOk) {
+          this.afterOk();
+        }
+        this.markerMessage = '';
+        this.afterOk = null;
+      },
+      modalCancel () {
+        this.showModal = false;
+        if (this.afterOk) {
+          this.afterCancel();
+        }
+        this.markerMessage = '';
+        this.afterCancel = null;
       }
+    },
+    components: {
+      Modal
     }
   }
 </script>

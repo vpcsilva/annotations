@@ -11,6 +11,7 @@
         </div>
         <div class="nav navbar-nav navbar-right">
           <button @click="save" class="btn btn-default navbar-btn">Save</button>
+          <button class="btn btn-default navbar-btn" @click="retrieve">Import</button>
         </div>
       </div>
     </div>
@@ -32,6 +33,9 @@
       },
       save () {
         EventBus.$emit('save');
+      },
+      retrieve () {
+        EventBus.$emit('import');
       }
     }
   }
