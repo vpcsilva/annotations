@@ -110,18 +110,16 @@
         this.showModal();
         this.modalTitle = 'Import Data';
         this.afterOk = () => {
-          let geoJson = L.geoJSON(JSON.parse(this.markerMessage),{
-            onEachFeature: (feat, layer) => {
-              layer.bindPopup(feat.properties.comment);
-              this.createContextMenu(layer);
-            }
-          });
-          geoJson.addTo(this.drawItems);
-          this.enableEditAll();
+          let geoJson = L.geoJSON(JSON.parse(this.markerMessage));
+          for(let layer of geoJson.getLayers()) {
+            layer.addTo(this.drawItems);
+            try {
+              layer.bindPopup(layer.feature.properties.comment);
+            } catch (e) {}
+            this.createContextMenu(layer);
+            layer.enableEdit();
+          }
         }
-      },
-      enableEditAll () {
-        window.layers = this.drawItems.getLayers();
       },
       modalOk () {
         this.hideModal();
@@ -154,6 +152,7 @@
         let rect = this.map.editTools.startRectangle();
     
         rect.on('editable:drawing:commit', (e) => {
+          this.modalTitle = 'Comment';
           this.showModal();
           this.afterOk = () => {
             rect.bindPopup(this.markerMessage);
@@ -168,6 +167,7 @@
       addMarker () {
         let marker = this.map.editTools.startMarker();
         marker.on('editable:drawing:commit', (e) => {
+          this.modalTitle = 'Comment';
           this.showModal();
           this.afterOk = () => {
             marker.bindPopup(this.markerMessage);
