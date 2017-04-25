@@ -3,13 +3,11 @@
     <div class="container-fluid">
       <div class="collapse navbar-collapse">
         <div class="nav navbar-nav">
-          <button class="btn btn-default navbar-btn disabled">Text</button>
-          <button v-on:click="circle" class="btn btn-default navbar-btn disabled">Circle</button>
-          <button v-on:click="rect" class="btn btn-default navbar-btn disabled">Square</button>
-          <button class="btn btn-default navbar-btn disabled">Line</button>
-          <button v-on:click="marker" class="btn btn-default navbar-btn disabled">Marker</button>
+          <button v-on:click="rect" class="btn btn-default navbar-btn">Rectangle</button>
+          <button v-on:click="marker" class="btn btn-default navbar-btn">Marker</button>
         </div>
         <div class="nav navbar-nav navbar-right">
+          <button @click="layer" class="btn btn-default navbar-btn">Toggle Layer</button>
           <button @click="save" class="btn btn-default navbar-btn">Save</button>
           <button class="btn btn-default navbar-btn" @click="retrieve">Import</button>
         </div>
@@ -22,11 +20,11 @@
   import EventBus from '../eventBus.js';
   export default {
     methods: {
-      circle () {
-        EventBus.$emit('addCircle');
+      layer () {
+        EventBus.$emit('toggleLayer');
       },
       rect () {
-        EventBus.$emit('addSquare');
+        EventBus.$emit('addRectangle');
       },
       marker () {
         EventBus.$emit('addMarker');
