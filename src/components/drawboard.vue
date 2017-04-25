@@ -98,32 +98,49 @@
       export () {
         this.showModal();
         this.modalTitle = 'Map Data';
+        this.drawItems.getLayers().forEach((l) => {
+          let feature = l.feature = l.feature || {}; // Initialize feature
+          feature.type = feature.type || "Feature"; // Initialize feature.type
+          let props = feature.properties = feature.properties || {}; // Initialize feature.properties
+          props.comment = l.getPopup().getContent();
+        });
         this.markerMessage = JSON.stringify(this.drawItems.toGeoJSON());
-        window.geoJson = this.drawItems.toGeoJSON();
-        console.log(this.drawItems.toGeoJSON());
       },
       retrieve () {
         this.showModal();
         this.modalTitle = 'Import Data';
         this.afterOk = () => {
-          let geoJson = L.geoJSON(JSON.parse(this.markerMessage));
+          let geoJson = L.geoJSON(JSON.parse(this.markerMessage),{
+            onEachFeature: (feat, layer) => {
+              layer.bindPopup(feat.properties.comment);
+              this.createContextMenu(layer);
+            }
+          });
           geoJson.addTo(this.drawItems);
+          this.enableEditAll();
         }
+      },
+      enableEditAll () {
+        window.layers = this.drawItems.getLayers();
       },
       modalOk () {
         this.hideModal();
         if (this.afterOk) {
           this.afterOk();
         }
+        this.cleanActions();
         this.markerMessage = '';
-        this.afterOk = null;
       },
       modalCancel () {
         this.hideModal();
-        if (this.afterOk) {
+        if (this.afterCancel) {
           this.afterCancel();
         }
+        this.cleanActions();
         this.markerMessage = '';
+      },
+      cleanActions() {
+        this.afterOk = null;
         this.afterCancel = null;
       },
       showModal () {
@@ -143,12 +160,10 @@
             this.drawItems.addLayer(rect);
           };
           this.afterCancel = () => {
-            console.log('Item canceled');
             this.map.removeLayer(rect);
           };
-          rect.bindContextMenu(this.createContextMenu(rect));
+          this.createContextMenu(rect);
         });
-        // rect.disableEdit();
       },
       addMarker () {
         let marker = this.map.editTools.startMarker();
@@ -159,10 +174,9 @@
             this.drawItems.addLayer(marker);
           };
           this.afterCancel = () => {
-            console.log('Item canceled');
             this.map.removeLayer(marker);
           };
-          marker.bindContextMenu(this.createContextMenu(marker));
+          this.createContextMenu(marker);
         });
       },
       createContextMenu (layer) {
@@ -182,7 +196,9 @@
             {
               text: 'Delete',
               callback: () => {
+                console.log('DELETE LAYER', layer);
                 this.drawItems.removeLayer(layer);
+                this.map.removeLayer(layer);
               }
             },
             '-',
@@ -191,16 +207,14 @@
             }
           ]
         };
-        return options;
+        layer.bindContextMenu(options);
       },
       toggleLayer () {
         if(this.layer) {
-          console.log('REMOVE LAYER', this.drawItems);
           this.map.removeLayer(this.drawItems);
           this.layer = !this.layer;
         }
         else {
-          console.log('ADD LAYER', this.drawItems);
           this.drawItems.addTo(this.map);
           this.layer = !this.layer;
         }
