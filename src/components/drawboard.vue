@@ -33,7 +33,6 @@
         imageOverlay: false,
         markerMessage: '',
         modalTitle: 'Comment',
-        layer: true,
       }
     },
     watch: {
@@ -56,7 +55,6 @@
       EventBus.$on('import', this.retrieve);
       EventBus.$on('addRectangle', this.addRectangle);
       EventBus.$on('addMarker', this.addMarker);
-      EventBus.$on('toggleLayer', this.toggleLayer);
     },
     mounted () {
       this.setupMap();
@@ -72,12 +70,16 @@
 
         this.map = L.map(this.id, options);
 
-        let drawItems = L.featureGroup();
+        let drawItems = this.createFeatureGroup();
         this.bounds = [[0,0],[this.imgHeight, this.imgWidth]];
         this.imageOverlay = L.imageOverlay(this.image.src, this.bounds).addTo(this.map);
 
         this.drawItems = drawItems;
+        this.annotations[this.index] = this.drawItems;
         this.map.fitBounds(this.bounds);
+      },
+      createFeatureGroup () {
+        return L.featureGroup();
       },
       createLatLngBounds (bounds) {
         let corner1 = L.latLng(0, 0);
@@ -90,10 +92,11 @@
         this.imageOverlay.setBounds(this.createLatLngBounds(this.bounds));
       },
       changeDrawboard (index) {
-        if (this.annotations[index]) {
-          
+        if (!this.annotations[index]) {
+          this.annotations[index] = this.createFeatureGroup();
         }
         this.drawboardIndex = index;
+        this.drawItems = this.annotations[index];
       },
       export () {
         this.showModal();
@@ -208,16 +211,6 @@
           ]
         };
         layer.bindContextMenu(options);
-      },
-      toggleLayer () {
-        if(this.layer) {
-          this.map.removeLayer(this.drawItems);
-          this.layer = !this.layer;
-        }
-        else {
-          this.drawItems.addTo(this.map);
-          this.layer = !this.layer;
-        }
       }
     },
     components: {
