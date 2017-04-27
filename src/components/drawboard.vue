@@ -33,7 +33,6 @@
         imageOverlay: false,
         markerMessage: '',
         modalTitle: 'Comment',
-        layer: true,
       }
     },
     watch: {
@@ -56,7 +55,6 @@
       EventBus.$on('import', this.retrieve);
       EventBus.$on('addRectangle', this.addRectangle);
       EventBus.$on('addMarker', this.addMarker);
-      EventBus.$on('toggleLayer', this.toggleLayer);
     },
     mounted () {
       this.setupMap();
@@ -72,12 +70,19 @@
 
         this.map = L.map(this.id, options);
 
-        let drawItems = L.featureGroup();
+        let drawItems = this.createFeatureGroup();
         this.bounds = [[0,0],[this.imgHeight, this.imgWidth]];
         this.imageOverlay = L.imageOverlay(this.image.src, this.bounds).addTo(this.map);
 
         this.drawItems = drawItems;
+        this.annotations[this.index] = this.drawItems;
         this.map.fitBounds(this.bounds);
+      },
+      createFeatureGroup () {
+        let fg = L.featureGroup();
+        fg.addTo(this.map);
+        this.map.removeLayer(fg);
+        return fg;
       },
       createLatLngBounds (bounds) {
         let corner1 = L.latLng(0, 0);
@@ -90,34 +95,55 @@
         this.imageOverlay.setBounds(this.createLatLngBounds(this.bounds));
       },
       changeDrawboard (index) {
-        if (this.annotations[index]) {
-          
+        if (!this.annotations[index]) {
+          this.annotations[index] = this.createFeatureGroup();
         }
         this.drawboardIndex = index;
+        this.drawItems = this.annotations[index];
       },
       export () {
         this.showModal();
         this.modalTitle = 'Map Data';
-        this.drawItems.getLayers().forEach((l) => {
-          let feature = l.feature = l.feature || {}; // Initialize feature
-          feature.type = feature.type || "Feature"; // Initialize feature.type
-          let props = feature.properties = feature.properties || {}; // Initialize feature.properties
-          props.comment = l.getPopup().getContent();
+        let drawboardsJson = [];
+        this.annotations.forEach((drawItems) => {
+          drawItems.getLayers().forEach((l) => {
+            let feature = l.feature = l.feature || {}; // Initialize feature
+            feature.type = feature.type || "Feature"; // Initialize feature.type
+            let props = feature.properties = feature.properties || {}; // Initialize feature.properties
+            props.comment = l.getPopup().getContent();
+          });
+          drawboardsJson.push(drawItems.toGeoJSON());
         });
-        this.markerMessage = JSON.stringify(this.drawItems.toGeoJSON());
+        this.markerMessage = JSON.stringify(drawboardsJson);
       },
       retrieve () {
         this.showModal();
         this.modalTitle = 'Import Data';
         this.afterOk = () => {
-          let geoJson = L.geoJSON(JSON.parse(this.markerMessage));
-          for(let layer of geoJson.getLayers()) {
-            layer.addTo(this.drawItems);
-            try {
-              layer.bindPopup(layer.feature.properties.comment);
-            } catch (e) {}
-            this.createContextMenu(layer);
-            layer.enableEdit();
+          let drawboards = JSON.parse(this.markerMessage);
+          for(let i = 0; i < drawboards.length; i++) {
+            console.log('Drawboard ',i);
+            let geoJson = L.geoJSON(drawboards[i]);
+            console.log('GEOJSON', geoJson);
+            for(let layer of geoJson.getLayers()) {
+              if (this.drawboardIndex === i) {
+                layer.addTo(this.drawItems);
+              }
+              else {
+                if (!this.annotations[i]) {
+                  console.log('Create annotations');
+                  this.annotations[i] = this.createFeatureGroup();
+                }
+                console.log('Add to Annotations');
+                layer.addTo(this.annotations[i]);
+              }
+              try {
+                layer.bindPopup(layer.feature.properties.comment);
+              } catch (e) {}
+              this.createContextMenu(layer);
+              console.log('Enable Edit', layer);
+              // layer.enableEdit();
+            }
           }
         }
       },
@@ -155,7 +181,9 @@
           this.modalTitle = 'Comment';
           this.showModal();
           this.afterOk = () => {
-            rect.bindPopup(this.markerMessage);
+            if (this.markerMessage) {
+              rect.bindPopup(this.markerMessage);
+            }
             this.drawItems.addLayer(rect);
           };
           this.afterCancel = () => {
@@ -170,7 +198,9 @@
           this.modalTitle = 'Comment';
           this.showModal();
           this.afterOk = () => {
-            marker.bindPopup(this.markerMessage);
+            if (this.markerMessage) {
+              marker.bindPopup(this.markerMessage);
+            }
             this.drawItems.addLayer(marker);
           };
           this.afterCancel = () => {
@@ -186,7 +216,12 @@
             {
               text: 'Edit Comment',
               callback: () => {
-                this.markerMessage = layer.getPopup().getContent();
+                try {
+                  this.markerMessage = layer.getPopup().getContent();
+                }
+                catch (e) {
+                  this.markerMessage = '';
+                }
                 this.showModal();
                 this.afterOk = () => {
                   layer.setPopupContent(this.markerMessage);
@@ -208,16 +243,6 @@
           ]
         };
         layer.bindContextMenu(options);
-      },
-      toggleLayer () {
-        if(this.layer) {
-          this.map.removeLayer(this.drawItems);
-          this.layer = !this.layer;
-        }
-        else {
-          this.drawItems.addTo(this.map);
-          this.layer = !this.layer;
-        }
       }
     },
     components: {
