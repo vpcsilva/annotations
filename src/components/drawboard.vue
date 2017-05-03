@@ -25,7 +25,7 @@
         map: false,
         bounds: false,
         id: 'map'+this._uid,
-        itensOnMap: false,
+        toggleLayer: true,
         drawItems: null,
         modalVisible: false,
         annotations: [],
@@ -43,9 +43,13 @@
       },
       drawItems: function(newVal, oldVal) {
         if (oldVal) {
-         this.map.removeLayer(oldVal); 
+          this.map.removeLayer(oldVal);
         }
-        newVal.addTo(this.map);
+        this.map.addLayer(newVal);
+        newVal.eachLayer((l) => {
+          l.enableEdit();
+        });
+        this.map.fitBounds(this.bounds);
       }
     },
     created () {
@@ -58,6 +62,7 @@
     },
     mounted () {
       this.setupMap();
+      window.map = this.map;
     },
     methods: {
       setupMap () {
@@ -79,9 +84,7 @@
         this.map.fitBounds(this.bounds);
       },
       createFeatureGroup () {
-        let fg = L.featureGroup();
-        fg.addTo(this.map);
-        this.map.removeLayer(fg);
+        let fg = L.layerGroup();
         return fg;
       },
       createLatLngBounds (bounds) {
@@ -106,7 +109,7 @@
         this.modalTitle = 'Map Data';
         let drawboardsJson = [];
         this.annotations.forEach((drawItems) => {
-          drawItems.getLayers().forEach((l) => {
+          drawItems.eachLayer((l) => {
             let feature = l.feature = l.feature || {}; // Initialize feature
             feature.type = feature.type || "Feature"; // Initialize feature.type
             let props = feature.properties = feature.properties || {}; // Initialize feature.properties
@@ -122,29 +125,50 @@
         this.afterOk = () => {
           let drawboards = JSON.parse(this.markerMessage);
           for(let i = 0; i < drawboards.length; i++) {
-            console.log('Drawboard ',i);
             let geoJson = L.geoJSON(drawboards[i]);
-            console.log('GEOJSON', geoJson);
-            for(let layer of geoJson.getLayers()) {
-              if (this.drawboardIndex === i) {
-                layer.addTo(this.drawItems);
+            geoJson.eachLayer((layer) => {
+              let layerPopup;
+              try {
+                layerPopup = layer.feature.properties.comment;
               }
+              catch (e) {}
+              // add layer to current drawboard
+              if (this.drawboardIndex === i) {
+                layer = this.addLayerTo(layer, this.drawItems);
+              }
+              // add layer to respective drawboard
               else {
                 if (!this.annotations[i]) {
-                  console.log('Create annotations');
                   this.annotations[i] = this.createFeatureGroup();
                 }
-                console.log('Add to Annotations');
-                layer.addTo(this.annotations[i]);
+                layer = this.addLayerTo(layer, this.annotations[i]);
               }
-              try {
-                layer.bindPopup(layer.feature.properties.comment);
-              } catch (e) {}
+              console.log(layerPopup);
+              layer.bindPopup(layerPopup);
               this.createContextMenu(layer);
-              console.log('Enable Edit', layer);
-              // layer.enableEdit();
-            }
+              try {
+                layer.enableEdit();
+              } catch (e) {
+                console.error('Couldn\'t enable edit', layer);
+              }
+            });
           }
+        }
+      },
+      addLayerTo (layer, destination) {
+        try{
+          if(layer.feature.geometry.type.toLowerCase() === 'polygon') {
+            let rect = L.rectangle(layer.getBounds());
+            destination.addLayer(rect);
+            layer = rect;
+          }
+          else {
+            destination.addLayer(layer);
+          }
+          return layer;
+        } catch(e) {
+          destination.addLayer(layer);
+          return layer;
         }
       },
       modalOk () {
@@ -231,7 +255,6 @@
             {
               text: 'Delete',
               callback: () => {
-                console.log('DELETE LAYER', layer);
                 this.drawItems.removeLayer(layer);
                 this.map.removeLayer(layer);
               }
@@ -243,7 +266,7 @@
           ]
         };
         layer.bindContextMenu(options);
-      }
+      },
     },
     components: {
       Modal

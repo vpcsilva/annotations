@@ -19,9 +19,6 @@
   import EventBus from '../eventBus.js';
   export default {
     methods: {
-      layer () {
-        EventBus.$emit('toggleLayer');
-      },
       rect () {
         EventBus.$emit('addRectangle');
       },
@@ -33,7 +30,7 @@
       },
       retrieve () {
         EventBus.$emit('import');
-      }
+      },
     }
   }
 </script>
