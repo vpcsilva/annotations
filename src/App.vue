@@ -58,10 +58,6 @@ export default {
     Drawboard
   },
   created () {
-    // let Mapa = this.$options.components['Drawboard'];
-    // let mapa1 = new Mapa({
-    //   image: this.images[1]
-    // });
     window.Drawboard = Drawboard;
     console.log('MAPA DINAMICO', Drawboard);
   },
